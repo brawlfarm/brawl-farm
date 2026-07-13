@@ -1,6 +1,4 @@
 // Backend-shared arena state via Lovable Cloud (Supabase).
-// Persists in a single JSONB row; realtime keeps all devices in sync.
-
 import { supabase } from "@/integrations/supabase/client";
 
 export type Player = {
@@ -26,10 +24,18 @@ export type Settings = {
   freeEntryThreshold: number;
 };
 
+export type FeedEvent = {
+  id: string;
+  type: "inscricao" | "pagamento" | "sala" | "vencedor" | "diario";
+  message: string;
+  at: number;
+};
+
 export type ArenaState = {
   settings: Settings;
   registered: Player[];
   history: Player[];
+  feed: FeedEvent[];
 };
 
 const SESSION_KEY = "arena_brawl_session_v1";
@@ -50,6 +56,7 @@ export const defaultState: ArenaState = {
   },
   registered: [],
   history: [],
+  feed: [],
 };
 
 function merge(raw: Partial<ArenaState> | null | undefined): ArenaState {
@@ -60,6 +67,7 @@ function merge(raw: Partial<ArenaState> | null | undefined): ArenaState {
     settings: { ...defaultState.settings, ...(s.settings ?? {}) },
     registered: s.registered ?? [],
     history: s.history ?? [],
+    feed: s.feed ?? [],
   };
 }
 
@@ -107,6 +115,11 @@ export function saveAdmin(v: boolean) {
 }
 
 export function uid() { return Math.random().toString(36).slice(2, 10); }
+
+export function pushFeed(state: ArenaState, evt: Omit<FeedEvent, "id" | "at">): ArenaState {
+  const event: FeedEvent = { ...evt, id: uid(), at: Date.now() };
+  return { ...state, feed: [event, ...state.feed].slice(0, 30) };
+}
 
 export function upsertHistory(state: ArenaState, player: Player): ArenaState {
   const idx = state.history.findIndex(
