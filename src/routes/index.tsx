@@ -368,46 +368,8 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
   );
 }
 
-/* ---------- Live Feed ---------- */
-function LiveFeed({ feed }: { feed: FeedEvent[] }) {
-  const items = feed.slice(0, 8);
-  const icon = (t: FeedEvent["type"]) => {
-    if (t === "inscricao") return <Zap className="h-3.5 w-3.5 text-primary-glow" />;
-    if (t === "pagamento") return <Check className="h-3.5 w-3.5 text-success" />;
-    if (t === "sala") return <DoorOpen className="h-3.5 w-3.5 text-warning" />;
-    if (t === "vencedor") return <Trophy className="h-3.5 w-3.5 text-warning" />;
-    return <Flag className="h-3.5 w-3.5 text-primary-glow" />;
-  };
-  return (
-    <section className="card-surface mb-4 p-5 animate-fade-up">
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
-        <Radio className="h-5 w-5 text-primary-glow animate-pulse" /> Feed ao vivo
-        <span className="chip ml-1"><span className="live-dot" /> tempo real</span>
-      </h2>
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Sem atividade ainda. Fique de olho aqui!</p>
-      ) : (
-        <ul className="grid gap-2">
-          {items.map((e) => (
-            <li key={e.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/40 p-2.5 text-sm animate-feed-in">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2">{icon(e.type)}</span>
-              <span className="min-w-0 flex-1 truncate">{e.message}</span>
-              <span className="shrink-0 text-[10px] uppercase text-muted-foreground tabular-nums">{timeAgo(e.at)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
 
-function timeAgo(t: number) {
-  const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60); if (m < 60) return `${m}min`;
-  const h = Math.floor(m / 60); if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-}
+
 
 /* ---------- Players list ---------- */
 function PlayersList({ registered }: { registered: Player[] }) {
