@@ -294,7 +294,7 @@ function DiaryClosed() {
 }
 
 /* ---------- Spot secured (payment) ---------- */
-function SpotSecuredCard({ player, settings, hasFreeEntry }: { player: Player; settings: { pixKey: string; entryFee: string; whatsappNumber: string; whatsappMessage: string; roomUnlocked: boolean; roomLink: string; freeEntryThreshold: number }; hasFreeEntry: boolean }) {
+function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: Player; settings: { pixKey: string; entryFee: string; whatsappNumber: string; whatsappMessage: string; roomUnlocked: boolean; roomLink: string; freeEntryThreshold: number }; hasFreeEntry: boolean; onLeave: () => void }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
@@ -328,7 +328,7 @@ function SpotSecuredCard({ player, settings, hasFreeEntry }: { player: Player; s
 
           <div className="mb-3 rounded-xl border border-border bg-background/60 p-3">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              <KeyRound className="h-3 w-3" /> Chave Pix
+              <QrCode className="h-3 w-3" /> Chave Pix
             </div>
             <div className="flex items-center gap-2">
               <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2/60 px-3 py-2 font-mono text-sm">{settings.pixKey}</code>
