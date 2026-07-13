@@ -242,23 +242,28 @@ function SessionBar({ session, onLogout }: { session: { name: string; phone: str
 function LoginCard({ onLogin }: { onLogin: (name: string, phone: string) => void }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const canSubmit = name.trim().length >= 2 && phone.replace(/\D/g, "").length >= 8;
+  const cleanName = name.trim().slice(0, 60);
+  const cleanPhone = phone.replace(/\D/g, "").slice(0, 15);
+  const canSubmit = cleanName.length >= 2 && cleanPhone.length >= 8;
   return (
     <section className="card-surface mb-4 p-5 animate-fade-up">
       <h2 className="mb-1 flex items-center gap-2 text-lg font-bold"><LogIn className="h-5 w-5 text-primary-glow" /> Entrar</h2>
       <p className="mb-4 text-sm text-muted-foreground">Faça login para se inscrever. Use seu nome e celular.</p>
       <div className="grid gap-3">
-        <input className="input-field" placeholder="Seu nome completo" value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="input-field" placeholder="Seu celular (só números)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
-        <button disabled={!canSubmit} onClick={() => onLogin(name.trim(), phone.replace(/\D/g, ""))} className="btn-primary rounded-md py-2.5 font-semibold">Entrar</button>
+        <input className="input-field" placeholder="Seu nome completo" value={name} onChange={(e) => setName(e.target.value.slice(0, 60))} maxLength={60} />
+        <input className="input-field" placeholder="Seu celular (só números)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 15))} inputMode="numeric" maxLength={15} />
+        <button disabled={!canSubmit} onClick={() => onLogin(cleanName, cleanPhone)} className="btn-primary rounded-md py-2.5 font-semibold">Entrar</button>
       </div>
     </section>
   );
 }
 
+
 /* ---------- Register ---------- */
 function RegisterCard({ session, onRegister }: { session: { name: string; phone: string }; onRegister: (nick: string) => void }) {
   const [nick, setNick] = useState("");
+  const cleanNick = nick.trim().slice(0, 20);
+  const valid = cleanNick.length >= 2 && /^[\p{L}\p{N}_\-. ]+$/u.test(cleanNick);
   return (
     <section className="card-surface mb-4 p-5 animate-fade-up">
       <h2 className="mb-1 flex items-center gap-2 text-lg font-bold"><Zap className="h-5 w-5 text-primary-glow" /> Garantir vaga</h2>
@@ -266,14 +271,15 @@ function RegisterCard({ session, onRegister }: { session: { name: string; phone:
       <div className="grid gap-3">
         <input className="input-field opacity-70" value={session.name} disabled />
         <input className="input-field opacity-70" value={session.phone} disabled />
-        <input className="input-field" placeholder="Nick do jogo" value={nick} onChange={(e) => setNick(e.target.value)} />
-        <button disabled={!nick.trim()} onClick={() => onRegister(nick.trim())} className="btn-primary rounded-md py-2.5 font-semibold">
+        <input className="input-field" placeholder="Nick do jogo (2-20 caracteres)" value={nick} onChange={(e) => setNick(e.target.value.slice(0, 20))} maxLength={20} />
+        <button disabled={!valid} onClick={() => onRegister(cleanNick)} className="btn-primary rounded-md py-2.5 font-semibold">
           Garantir minha vaga
         </button>
       </div>
     </section>
   );
 }
+
 
 function SlotsFull() {
   return (
@@ -318,37 +324,34 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
           <p className="mt-1 text-sm text-muted-foreground">Você completou {settings.freeEntryThreshold} partidas e ganhou entrada gratuita.</p>
         </div>
       ) : (
-        <div className="mb-4 rounded-2xl border border-primary/30 bg-[image:var(--gradient-card)] p-4">
-          <div className="mb-3 flex items-center justify-between">
+        <div className="mb-4">
+          <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-primary-glow">
               <DollarSign className="h-4 w-4" /> Pagamento via Pix
             </div>
             <span className="text-2xl font-black text-primary-glow tabular-nums">{settings.entryFee}</span>
           </div>
 
-          <div className="mb-3 rounded-xl border border-border bg-background/60 p-3">
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              <QrCode className="h-3 w-3" /> Chave Pix
+          <div className="rounded-2xl border border-primary/30 bg-background/60 p-4 shadow-[0_0_30px_-10px_var(--color-primary-glow)]">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Chave Pix</div>
+            <div className="mb-3 break-all rounded-lg border border-border bg-surface-2/70 px-3 py-3 text-center font-mono text-sm text-primary-glow" style={{ fontFamily: "'Courier New', ui-monospace, monospace" }}>
+              {settings.pixKey}
             </div>
-            <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2/60 px-3 py-2 font-mono text-sm">{settings.pixKey}</code>
-              <button onClick={copy} className="btn-primary flex shrink-0 items-center gap-1 rounded-md px-3 py-2 text-sm">
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Ok" : "Copiar"}
-              </button>
-            </div>
+            <button onClick={copy} className="btn-primary flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-bold">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Chave copiada!" : "Copiar chave Pix"}
+            </button>
           </div>
 
-          <ol className="mb-3 space-y-1.5 rounded-xl bg-surface-2/40 p-3 text-xs text-muted-foreground">
-            <li><span className="font-bold text-foreground">1.</span> Copie a chave Pix acima</li>
-            <li><span className="font-bold text-foreground">2.</span> Pague o valor de <span className="font-bold text-primary-glow">{settings.entryFee}</span> no app do seu banco</li>
-            <li><span className="font-bold text-foreground">3.</span> Envie o comprovante para o admin no WhatsApp</li>
-          </ol>
-
-          <a href={waLink} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-md bg-success/15 py-2.5 text-sm font-bold text-success hover:bg-success/25 transition">
+          <a href={waLink} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-md bg-success/15 py-2.5 text-sm font-bold text-success hover:bg-success/25 transition">
             <MessageCircle className="h-4 w-4" /> Avisar admin no WhatsApp
           </a>
+
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            Após pagar, o admin confirma sua inscrição no site.
+          </p>
         </div>
       )}
+
 
       <div className="rounded-xl border border-border bg-surface-2/50 p-4">
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
@@ -364,9 +367,17 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
           </div>
         )}
       </div>
+
+      <button
+        onClick={() => { if (confirm("Tem certeza que quer sair da sala? Sua inscrição será cancelada.")) onLeave(); }}
+        className="btn-ghost mt-3 flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
+      >
+        <LogOut className="h-4 w-4" /> Sair da sala
+      </button>
     </section>
   );
 }
+
 
 
 
@@ -396,77 +407,71 @@ function PlayersList({ registered }: { registered: Player[] }) {
   );
 }
 
-/* ---------- Ranking (podium + rest) ---------- */
+/* ---------- Ranking (list style, like reference) ---------- */
 function Ranking({ history }: { history: Player[] }) {
-  const sorted = [...history].sort((a, b) => (b.matchesPlayed || 0) - (a.matchesPlayed || 0));
-  const top3 = sorted.slice(0, 3);
-  const rest = sorted.slice(3, 15);
-  const max = sorted[0]?.matchesPlayed || 1;
+  const [expanded, setExpanded] = useState(false);
+  const sorted = [...history]
+    .filter((p) => (p.matchesPlayed || 0) > 0)
+    .sort((a, b) => (b.matchesPlayed || 0) - (a.matchesPlayed || 0));
+  const shown = expanded ? sorted.slice(0, 50) : sorted.slice(0, 10);
 
   return (
     <section className="card-surface mb-4 p-5 animate-fade-up">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
-        <Crown className="h-5 w-5 text-warning" /> Ranking geral
-        <span className="chip ml-1">top {Math.min(15, sorted.length)}</span>
+      <h2 className="mb-1 flex items-center gap-2 text-lg font-bold">
+        <Crown className="h-5 w-5 text-warning" /> Ranking
       </h2>
+      <p className="mb-4 text-xs text-muted-foreground">Jogadores mais ativos — por partidas jogadas</p>
 
       {sorted.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Ainda não há dados de partidas.</p>
+        <div className="rounded-lg border border-dashed border-border bg-surface-2/30 p-6 text-center text-sm text-muted-foreground">
+          Ainda não há partidas registradas.
+        </div>
       ) : (
         <>
-          {/* Podium */}
-          {top3.length > 0 && (
-            <div className="mb-5 grid grid-cols-3 items-end gap-2">
-              {[1, 0, 2].map((idx, col) => {
-                const p = top3[idx];
-                if (!p) return <div key={col} />;
-                const heights = ["h-16", "h-24", "h-12"];
-                const heightIdx = idx === 0 ? 1 : idx === 1 ? 0 : 2;
-                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
-                const glow = idx === 0 ? "from-yellow-400/40 to-yellow-600/10 border-yellow-400/50" :
-                             idx === 1 ? "from-slate-300/30 to-slate-500/10 border-slate-300/40" :
-                                         "from-amber-600/30 to-amber-800/10 border-amber-600/40";
-                return (
-                  <div key={p.id} className="flex flex-col items-center gap-2 animate-podium" style={{ animationDelay: `${col * 120}ms` }}>
-                    <div className={`grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br ${glow} border-2 text-2xl ${idx === 0 ? "animate-glow" : ""}`}>
-                      {medal}
-                    </div>
-                    <div className="w-full min-w-0 text-center">
-                      <div className="truncate text-sm font-bold">{p.nick || p.name}</div>
-                      <div className="text-[10px] tabular-nums text-muted-foreground">{p.matchesPlayed} partidas</div>
-                    </div>
-                    <div className={`w-full ${heights[heightIdx]} rounded-t-lg bg-gradient-to-t ${glow} border border-b-0`} />
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <ul className="flex flex-col gap-2">
+            {shown.map((p, i) => {
+              const pos = i + 1;
+              const isTop1 = pos === 1;
+              const isTop2 = pos === 2;
+              const isTop3 = pos === 3;
+              const rowBg =
+                isTop1 ? "bg-gradient-to-r from-yellow-400/15 to-transparent border-yellow-400/40" :
+                isTop2 ? "bg-gradient-to-r from-slate-300/15 to-transparent border-slate-300/40" :
+                isTop3 ? "bg-gradient-to-r from-amber-600/15 to-transparent border-amber-600/40" :
+                         "bg-surface-2/40 border-border";
+              const posColor =
+                isTop1 ? "text-yellow-400" :
+                isTop2 ? "text-slate-300" :
+                isTop3 ? "text-amber-500" :
+                         "text-muted-foreground";
+              const medal = isTop1 ? "🥇" : isTop2 ? "🥈" : isTop3 ? "🥉" : null;
+              return (
+                <li key={p.id} className={`flex items-center gap-3 rounded-lg border p-2.5 transition hover:border-primary/40 ${rowBg} animate-fade-up`} style={{ animationDelay: `${i * 30}ms` }}>
+                  <span className={`w-8 shrink-0 text-center text-lg font-black tabular-nums ${posColor}`}>{pos}</span>
+                  {medal && <span className="shrink-0 text-lg">{medal}</span>}
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">{p.nick || p.name}</span>
+                  <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
+                    {p.matchesPlayed} {p.matchesPlayed === 1 ? "partida" : "partidas"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
 
-          {/* Rest */}
-          {rest.length > 0 && (
-            <ul className="grid gap-2">
-              {rest.map((p, i) => {
-                const pct = Math.max(6, ((p.matchesPlayed || 0) / max) * 100);
-                return (
-                  <li key={p.id} className="rounded-lg border border-border bg-surface-2/40 p-3">
-                    <div className="mb-1.5 flex items-center gap-2 text-sm">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-bold tabular-nums text-muted-foreground">{i + 4}</span>
-                      <span className="min-w-0 flex-1 truncate font-semibold">{p.nick || p.name}</span>
-                      <span className="chip shrink-0 tabular-nums"><Medal className="h-3 w-3" /> {p.matchesPlayed}</span>
-                    </div>
-                    <div className="progress-shell h-2">
-                      <div className="progress-fill" style={{ width: `${pct}%` }} />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+          {sorted.length > 10 && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="btn-ghost mt-3 w-full rounded-md py-2 text-xs font-semibold uppercase tracking-wide"
+            >
+              {expanded ? "Mostrar menos" : `Ver todos (${sorted.length})`}
+            </button>
           )}
         </>
       )}
     </section>
   );
 }
+
 
 /* ---------- Admin ---------- */
 function AdminSection({
