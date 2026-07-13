@@ -3,10 +3,11 @@ import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Trophy, LogOut, LogIn, Copy, Check, MessageCircle, DoorOpen, Shield,
-  Users, Zap, Crown, Lock, Unlock, Plus, Minus, Trash2, X,
-  ChevronDown, ChevronUp, Gift, Wifi, Sparkles, Flag, Medal, Radio,
-  DollarSign, KeyRound, Loader2,
+  Users, Zap, Crown, Lock, Unlock, Plus, Minus, Trash2,
+  ChevronDown, ChevronUp, Gift, Sparkles, Flag, Medal, Radio,
+  DollarSign, KeyRound,
 } from "lucide-react";
+
 import { useArena } from "@/lib/use-arena";
 import { uid, upsertHistory, pushFeed, type Player, type FeedEvent } from "@/lib/arena-store";
 
