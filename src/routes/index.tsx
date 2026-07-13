@@ -104,14 +104,23 @@ function ArenaPage() {
             {session && !currentPlayer && remaining === 0 && <SlotsFull />}
 
             {currentPlayer && (
-              <SpotSecuredCard player={currentPlayer} settings={settings} hasFreeEntry={hasFreeEntry} />
+              <SpotSecuredCard
+                player={currentPlayer}
+                settings={settings}
+                hasFreeEntry={hasFreeEntry}
+                onLeave={() => {
+                  update((s) => ({ ...s, registered: s.registered.filter((p) => p.id !== currentPlayer.id) }));
+                  toast.info("Você saiu da sala");
+                }}
+              />
             )}
           </>
         )}
 
-        <LiveFeed feed={feed} />
         <PlayersList registered={registered} />
         <Ranking history={history} />
+
+
 
         <AdminSection
           isAdmin={isAdmin}
@@ -124,13 +133,15 @@ function ArenaPage() {
           update={update}
         />
 
-        <footer className="mt-10 pb-10 text-center text-xs text-muted-foreground">
-          © Arena Brawl Diário {new Date().getFullYear()} • Tempo real via Lovable Cloud
+        <footer className="footer-mono mt-10 pb-10 text-center text-xs text-muted-foreground/60">
+          © Pietro Henrique
         </footer>
       </div>
+      <FarmBot />
     </>
   );
 }
+
 
 /* ---------- Loading screen ---------- */
 function LoadingScreen({ connected }: { connected: boolean }) {
