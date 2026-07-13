@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   Trophy, LogOut, LogIn, Copy, Check, MessageCircle, DoorOpen, Shield,
@@ -21,6 +21,28 @@ export const Route = createFileRoute("/")({
 function ArenaPage() {
   const { state, update, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
   const { settings, registered, history, feed } = state;
+
+  // Show new feed events as toast notifications (bottom-right)
+  const seenIds = useRef<Set<string>>(new Set());
+  const bootstrapped = useRef(false);
+  useEffect(() => {
+    if (!bootstrapped.current) {
+      feed.forEach((f) => seenIds.current.add(f.id));
+      bootstrapped.current = true;
+      return;
+    }
+    const fresh = feed.filter((f) => !seenIds.current.has(f.id));
+    fresh.reverse().forEach((f) => {
+      seenIds.current.add(f.id);
+      const icon =
+        f.type === "vencedor" ? "🏆" :
+        f.type === "pagamento" ? "💸" :
+        f.type === "sala" ? "🚪" :
+        f.type === "diario" ? "🏁" : "⚡";
+      toast(`${icon} ${f.message}`);
+    });
+  }, [feed]);
+
 
   const filled = registered.length;
   const remaining = Math.max(0, settings.totalSlots - filled);
