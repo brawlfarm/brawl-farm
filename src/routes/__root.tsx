@@ -8,6 +8,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Toaster } from "sonner";
+
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -83,6 +85,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster
+        position="top-center"
+        theme="dark"
+        richColors
+        closeButton
+        toastOptions={{ style: { border: "1px solid var(--color-border)" } }}
+      />
     </QueryClientProvider>
   );
 }
+
