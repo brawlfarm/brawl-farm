@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   Trophy, LogOut, LogIn, Copy, Check, MessageCircle, DoorOpen, Shield,
   Users, Zap, Crown, Lock, Unlock, Plus, Minus, Trash2,
   ChevronDown, ChevronUp, Gift, Sparkles, Flag, Medal, Radio,
-  DollarSign, KeyRound,
+  DollarSign, QrCode, Clock,
 } from "lucide-react";
 
 import { useArena } from "@/lib/use-arena";
-import { uid, upsertHistory, pushFeed, type Player, type FeedEvent } from "@/lib/arena-store";
+import { uid, upsertHistory, pushFeed, type Player } from "@/lib/arena-store";
+import { FarmBot } from "@/components/FarmBot";
+
+
 
 export const Route = createFileRoute("/")({
   component: ArenaPage,
@@ -18,6 +21,28 @@ export const Route = createFileRoute("/")({
 function ArenaPage() {
   const { state, update, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
   const { settings, registered, history, feed } = state;
+
+  // Show new feed events as toast notifications (bottom-right)
+  const seenIds = useRef<Set<string>>(new Set());
+  const bootstrapped = useRef(false);
+  useEffect(() => {
+    if (!bootstrapped.current) {
+      feed.forEach((f) => seenIds.current.add(f.id));
+      bootstrapped.current = true;
+      return;
+    }
+    const fresh = feed.filter((f) => !seenIds.current.has(f.id));
+    fresh.reverse().forEach((f) => {
+      seenIds.current.add(f.id);
+      const icon =
+        f.type === "vencedor" ? "🏆" :
+        f.type === "pagamento" ? "💸" :
+        f.type === "sala" ? "🚪" :
+        f.type === "diario" ? "🏁" : "⚡";
+      toast(`${icon} ${f.message}`);
+    });
+  }, [feed]);
+
 
   const filled = registered.length;
   const remaining = Math.max(0, settings.totalSlots - filled);
@@ -79,14 +104,23 @@ function ArenaPage() {
             {session && !currentPlayer && remaining === 0 && <SlotsFull />}
 
             {currentPlayer && (
-              <SpotSecuredCard player={currentPlayer} settings={settings} hasFreeEntry={hasFreeEntry} />
+              <SpotSecuredCard
+                player={currentPlayer}
+                settings={settings}
+                hasFreeEntry={hasFreeEntry}
+                onLeave={() => {
+                  update((s) => ({ ...s, registered: s.registered.filter((p) => p.id !== currentPlayer.id) }));
+                  toast.info("Você saiu da sala");
+                }}
+              />
             )}
           </>
         )}
 
-        <LiveFeed feed={feed} />
         <PlayersList registered={registered} />
         <Ranking history={history} />
+
+
 
         <AdminSection
           isAdmin={isAdmin}
@@ -99,13 +133,15 @@ function ArenaPage() {
           update={update}
         />
 
-        <footer className="mt-10 pb-10 text-center text-xs text-muted-foreground">
-          © Arena Brawl Diário {new Date().getFullYear()} • Tempo real via Lovable Cloud
+        <footer className="footer-mono mt-10 pb-10 text-center text-xs text-muted-foreground/60">
+          © Pietro Henrique
         </footer>
       </div>
+      <FarmBot />
     </>
   );
 }
+
 
 /* ---------- Loading screen ---------- */
 function LoadingScreen({ connected }: { connected: boolean }) {
@@ -258,7 +294,7 @@ function DiaryClosed() {
 }
 
 /* ---------- Spot secured (payment) ---------- */
-function SpotSecuredCard({ player, settings, hasFreeEntry }: { player: Player; settings: { pixKey: string; entryFee: string; whatsappNumber: string; whatsappMessage: string; roomUnlocked: boolean; roomLink: string; freeEntryThreshold: number }; hasFreeEntry: boolean }) {
+function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: Player; settings: { pixKey: string; entryFee: string; whatsappNumber: string; whatsappMessage: string; roomUnlocked: boolean; roomLink: string; freeEntryThreshold: number }; hasFreeEntry: boolean; onLeave: () => void }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
@@ -292,7 +328,7 @@ function SpotSecuredCard({ player, settings, hasFreeEntry }: { player: Player; s
 
           <div className="mb-3 rounded-xl border border-border bg-background/60 p-3">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              <KeyRound className="h-3 w-3" /> Chave Pix
+              <QrCode className="h-3 w-3" /> Chave Pix
             </div>
             <div className="flex items-center gap-2">
               <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2/60 px-3 py-2 font-mono text-sm">{settings.pixKey}</code>
@@ -332,46 +368,8 @@ function SpotSecuredCard({ player, settings, hasFreeEntry }: { player: Player; s
   );
 }
 
-/* ---------- Live Feed ---------- */
-function LiveFeed({ feed }: { feed: FeedEvent[] }) {
-  const items = feed.slice(0, 8);
-  const icon = (t: FeedEvent["type"]) => {
-    if (t === "inscricao") return <Zap className="h-3.5 w-3.5 text-primary-glow" />;
-    if (t === "pagamento") return <Check className="h-3.5 w-3.5 text-success" />;
-    if (t === "sala") return <DoorOpen className="h-3.5 w-3.5 text-warning" />;
-    if (t === "vencedor") return <Trophy className="h-3.5 w-3.5 text-warning" />;
-    return <Flag className="h-3.5 w-3.5 text-primary-glow" />;
-  };
-  return (
-    <section className="card-surface mb-4 p-5 animate-fade-up">
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
-        <Radio className="h-5 w-5 text-primary-glow animate-pulse" /> Feed ao vivo
-        <span className="chip ml-1"><span className="live-dot" /> tempo real</span>
-      </h2>
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Sem atividade ainda. Fique de olho aqui!</p>
-      ) : (
-        <ul className="grid gap-2">
-          {items.map((e) => (
-            <li key={e.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/40 p-2.5 text-sm animate-feed-in">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2">{icon(e.type)}</span>
-              <span className="min-w-0 flex-1 truncate">{e.message}</span>
-              <span className="shrink-0 text-[10px] uppercase text-muted-foreground tabular-nums">{timeAgo(e.at)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
 
-function timeAgo(t: number) {
-  const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60); if (m < 60) return `${m}min`;
-  const h = Math.floor(m / 60); if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-}
+
 
 /* ---------- Players list ---------- */
 function PlayersList({ registered }: { registered: Player[] }) {
