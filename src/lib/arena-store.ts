@@ -79,7 +79,8 @@ export async function fetchState(): Promise<ArenaState> {
 export async function persistState(next: ArenaState): Promise<void> {
   const { error } = await supabase
     .from("arena_state")
-    .upsert({ id: 1, data: next as unknown as Record<string, unknown>, updated_at: new Date().toISOString() });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .upsert({ id: 1, data: next as any, updated_at: new Date().toISOString() });
   if (error) console.error("[arena] persist error", error);
 }
 
