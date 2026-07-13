@@ -698,12 +698,13 @@ function AdminPlayers({ state, update }: {
   const confirmFinalize = () => {
     const winner = state.registered.find((p) => p.id === winnerId);
     update((st) => {
-      let next = { ...st, registered: [] };
+      let next: import("@/lib/arena-store").ArenaState = { ...st, registered: [] };
       if (winner) {
         next = pushFeed(next, { type: "vencedor", message: `🏆 ${winner.nick || winner.name} venceu o campeonato!` });
       }
       return next;
     });
+
     setFinalizeOpen(false);
     setWinnerId("");
     toast.success(winner ? `${winner.nick || winner.name} declarado vencedor!` : "Partida finalizada");
