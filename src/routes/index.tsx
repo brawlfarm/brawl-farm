@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Trophy, LogOut, LogIn, Copy, Check, MessageCircle, DoorOpen, Shield,
   Users, Zap, Crown, Lock, Unlock, Plus, Minus, Trash2,
   ChevronDown, ChevronUp, Gift, Sparkles, Flag, Medal, Radio,
-  DollarSign, QrCode, Clock, Ranking as RankIcon, LogOut as ExitIcon,
+  DollarSign, QrCode, Clock,
 } from "lucide-react";
 
 import { useArena } from "@/lib/use-arena";
 import { uid, upsertHistory, pushFeed, type Player } from "@/lib/arena-store";
 import { FarmBot } from "@/components/FarmBot";
+
 
 
 export const Route = createFileRoute("/")({
