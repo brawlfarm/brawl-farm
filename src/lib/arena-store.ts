@@ -1,5 +1,7 @@
-// Local storage store for the arena — works on any static host (GitHub Pages).
-// All state is persisted client-side and broadcasted via 'storage' events across tabs.
+// Backend-shared arena state via Lovable Cloud (Supabase).
+// Persists in a single JSONB row; realtime keeps all devices in sync.
+
+import { supabase } from "@/integrations/supabase/client";
 
 export type Player = {
   id: string;
@@ -26,15 +28,14 @@ export type Settings = {
 
 export type ArenaState = {
   settings: Settings;
-  registered: Player[]; // currently registered for tournament
-  history: Player[]; // all-time known players (for ranking)
+  registered: Player[];
+  history: Player[];
 };
 
-const KEY = "arena_brawl_state_v1";
 const SESSION_KEY = "arena_brawl_session_v1";
 const ADMIN_KEY = "arena_brawl_admin_v1";
 
-const defaultState: ArenaState = {
+export const defaultState: ArenaState = {
   settings: {
     totalSlots: 9,
     entryFee: "R$ 10,00",
@@ -51,24 +52,36 @@ const defaultState: ArenaState = {
   history: [],
 };
 
-export function loadState(): ArenaState {
-  if (typeof window === "undefined") return defaultState;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return defaultState;
-    const parsed = JSON.parse(raw);
-    return { ...defaultState, ...parsed, settings: { ...defaultState.settings, ...parsed.settings } };
-  } catch {
-    return defaultState;
-  }
+function merge(raw: Partial<ArenaState> | null | undefined): ArenaState {
+  const s = raw ?? {};
+  return {
+    ...defaultState,
+    ...s,
+    settings: { ...defaultState.settings, ...(s.settings ?? {}) },
+    registered: s.registered ?? [],
+    history: s.history ?? [],
+  };
 }
 
-export function saveState(state: ArenaState) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(state));
-  // trigger cross-tab sync + custom event for same-tab listeners
-  window.dispatchEvent(new StorageEvent("storage", { key: KEY }));
-  window.dispatchEvent(new CustomEvent("arena:update"));
+export async function fetchState(): Promise<ArenaState> {
+  const { data, error } = await supabase
+    .from("arena_state")
+    .select("data")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) {
+    console.error("[arena] fetch error", error);
+    return defaultState;
+  }
+  return merge((data?.data as Partial<ArenaState>) ?? null);
+}
+
+export async function persistState(next: ArenaState): Promise<void> {
+  const { error } = await supabase
+    .from("arena_state")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .upsert({ id: 1, data: next as any, updated_at: new Date().toISOString() });
+  if (error) console.error("[arena] persist error", error);
 }
 
 export type Session = { name: string; phone: string } | null;
@@ -81,7 +94,6 @@ export function saveSession(s: Session) {
   if (typeof window === "undefined") return;
   if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
   else localStorage.removeItem(SESSION_KEY);
-  window.dispatchEvent(new CustomEvent("arena:update"));
 }
 
 export function loadAdmin(): boolean {
@@ -92,7 +104,6 @@ export function saveAdmin(v: boolean) {
   if (typeof window === "undefined") return;
   if (v) localStorage.setItem(ADMIN_KEY, "1");
   else localStorage.removeItem(ADMIN_KEY);
-  window.dispatchEvent(new CustomEvent("arena:update"));
 }
 
 export function uid() { return Math.random().toString(36).slice(2, 10); }
