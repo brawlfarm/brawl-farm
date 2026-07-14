@@ -156,19 +156,11 @@ function ArenaPage() {
 function LoadingScreen({ connected }: { connected: boolean }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center px-6">
-      <div className="card-surface w-full max-w-sm p-8 text-center animate-fade-up">
-        <div className="mx-auto mb-6 grid h-20 w-20 place-items-center">
-          <div className="loader-ring" />
-        </div>
-        <div className="mb-1 flex items-center justify-center gap-2 text-lg font-black">
-          <Sparkles className="h-5 w-5 text-primary-glow" /> Arena Brawl Diário
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {connected ? "Sincronizando dados…" : "Conectando ao servidor…"}
+      <div className="text-center animate-fade-up">
+        <div className="mx-auto mb-5 loader-dots" />
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          {connected ? "Sincronizando…" : "Conectando ao servidor…"}
         </p>
-        <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Radio className="h-3 w-3" /> Tempo real
-        </div>
       </div>
     </div>
   );
@@ -178,7 +170,7 @@ function LoadingScreen({ connected }: { connected: boolean }) {
 function OnlineBadge({ connected }: { connected: boolean }) {
   return (
     <div className="floating-online animate-fade-up">
-      <span className={connected ? "live-dot" : "live-dot"} style={connected ? undefined : { background: "oklch(0.7 0.2 60)", boxShadow: "0 0 10px oklch(0.7 0.2 60)" }} />
+      <span className="live-dot" style={connected ? undefined : { background: "#f59e0b", boxShadow: "0 0 10px #f59e0b" }} />
       {connected ? "Online" : "Conectando"}
     </div>
   );
@@ -187,14 +179,13 @@ function OnlineBadge({ connected }: { connected: boolean }) {
 /* ---------- Header ---------- */
 function Header() {
   return (
-    <header className="mb-6 flex items-center gap-3">
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[image:var(--gradient-hero)] animate-glow">
-        <Trophy className="h-6 w-6 text-white" />
-      </div>
-      <div className="min-w-0">
-        <h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">Arena Brawl Diário</h1>
-        <p className="truncate text-xs text-muted-foreground">Inscrições • Pix • Sala liberada pelo admin</p>
-      </div>
+    <header className="mb-6 text-center animate-fade-up">
+      <h1 className="title-gradient animate-glow text-4xl sm:text-5xl font-normal leading-none">
+        Diário Brawl Farm
+      </h1>
+      <p className="mt-3 text-[11px] uppercase tracking-[0.4em] text-muted-foreground">
+        Inscrições • Pix • Sala liberada pelo admin
+      </p>
     </header>
   );
 }
