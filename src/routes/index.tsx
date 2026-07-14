@@ -156,19 +156,11 @@ function ArenaPage() {
 function LoadingScreen({ connected }: { connected: boolean }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center px-6">
-      <div className="card-surface w-full max-w-sm p-8 text-center animate-fade-up">
-        <div className="mx-auto mb-6 grid h-20 w-20 place-items-center">
-          <div className="loader-ring" />
-        </div>
-        <div className="mb-1 flex items-center justify-center gap-2 text-lg font-black">
-          <Sparkles className="h-5 w-5 text-primary-glow" /> Arena Brawl Diário
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {connected ? "Sincronizando dados…" : "Conectando ao servidor…"}
+      <div className="text-center animate-fade-up">
+        <div className="mx-auto mb-5 loader-dots" />
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          {connected ? "Sincronizando…" : "Conectando ao servidor…"}
         </p>
-        <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Radio className="h-3 w-3" /> Tempo real
-        </div>
       </div>
     </div>
   );
@@ -178,7 +170,7 @@ function LoadingScreen({ connected }: { connected: boolean }) {
 function OnlineBadge({ connected }: { connected: boolean }) {
   return (
     <div className="floating-online animate-fade-up">
-      <span className={connected ? "live-dot" : "live-dot"} style={connected ? undefined : { background: "oklch(0.7 0.2 60)", boxShadow: "0 0 10px oklch(0.7 0.2 60)" }} />
+      <span className="live-dot" style={connected ? undefined : { background: "#f59e0b", boxShadow: "0 0 10px #f59e0b" }} />
       {connected ? "Online" : "Conectando"}
     </div>
   );
@@ -187,60 +179,64 @@ function OnlineBadge({ connected }: { connected: boolean }) {
 /* ---------- Header ---------- */
 function Header() {
   return (
-    <header className="mb-6 flex items-center gap-3">
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[image:var(--gradient-hero)] animate-glow">
-        <Trophy className="h-6 w-6 text-white" />
-      </div>
-      <div className="min-w-0">
-        <h1 className="truncate text-xl font-black tracking-tight sm:text-2xl">Arena Brawl Diário</h1>
-        <p className="truncate text-xs text-muted-foreground">Inscrições • Pix • Sala liberada pelo admin</p>
-      </div>
+    <header className="mb-6 text-center animate-fade-up">
+      <h1 className="title-gradient animate-glow text-4xl sm:text-5xl font-normal leading-none">
+        Diário Brawl Farm
+      </h1>
+      <p className="mt-3 text-[11px] uppercase tracking-[0.4em] text-muted-foreground">
+        Inscrições • Pix • Sala liberada pelo admin
+      </p>
     </header>
   );
 }
 
 /* ---------- Stats + Progress ---------- */
 function StatsBar({ filled, total, remaining, pct }: { filled: number; total: number; remaining: number; pct: number }) {
+  const fillClass =
+    pct >= 100 ? "progress-fill progress-fill-high" :
+    pct >= 80 ? "progress-fill progress-fill-high" :
+    pct >= 50 ? "progress-fill progress-fill-medium" :
+    "progress-fill";
   return (
-    <section className="card-surface mb-4 p-5 animate-fade-up">
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <Stat label="Vagas" value={total} icon={<Users className="h-4 w-4" />} />
-        <Stat label="Inscritos" value={filled} icon={<Zap className="h-4 w-4" />} highlight />
-        <Stat label="Restantes" value={remaining} icon={<Crown className="h-4 w-4" />} />
+    <section className="card-surface mb-4 p-6 animate-fade-up">
+      <div className="grid grid-cols-3 gap-2.5 mb-3">
+        <Stat label="Vagas" value={total} icon={<Users className="h-[18px] w-[18px]" />} />
+        <Stat label="Inscritos" value={filled} icon={<Zap className="h-[18px] w-[18px]" />} />
+        <Stat label="Restantes" value={remaining} icon={<Crown className="h-[18px] w-[18px]" />} />
       </div>
-      <div className="mt-5">
-        <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{filled}/{total} vagas preenchidas</span>
-          <span className="font-semibold text-primary-glow tabular-nums">{Math.round(pct)}%</span>
-        </div>
+      <div className="mt-1">
         <div className="progress-shell">
-          <div className="progress-fill" style={{ width: `${pct}%` }} />
+          <div className={fillClass} style={{ width: `${pct}%` }} />
+        </div>
+        <div className="mt-1.5 text-center text-xs text-muted-foreground">
+          {filled}/{total} vagas preenchidas · {Math.round(pct)}%
         </div>
       </div>
     </section>
   );
 }
 
-function Stat({ label, value, icon, highlight }: { label: string; value: number; icon: React.ReactNode; highlight?: boolean }) {
+function Stat({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className={`rounded-xl border border-border p-3 ${highlight ? "bg-primary/10" : "bg-surface-2/50"}`}>
-      <div className="mb-1 flex items-center justify-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-        {icon}<span>{label}</span>
-      </div>
-      <div className={`text-2xl font-black tabular-nums ${highlight ? "text-primary-glow" : ""}`}>{value}</div>
+    <div className="mini-stat">
+      <div className="text-primary-glow flex justify-center">{icon}</div>
+      <div className="mt-1 text-[26px] font-extrabold leading-none text-white tabular-nums">{value}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-wide">{label}</div>
     </div>
   );
 }
+
 
 /* ---------- Session Bar ---------- */
 function SessionBar({ session, onLogout }: { session: { name: string; phone: string } | null; onLogout: () => void }) {
   if (!session) return null;
   return (
-    <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-surface-2/50 px-4 py-2.5 text-sm animate-fade-up">
-      <div className="min-w-0 truncate">
-        Logado como <span className="font-semibold text-primary-glow">{session.name}</span>
+    <div className="user-bar mb-4 flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm animate-fade-up">
+      <div className="flex min-w-0 items-center gap-2 truncate">
+        <span className="text-primary-glow text-lg">👤</span>
+        <span className="truncate">Logado como <span className="font-bold text-[#c4b5fd]">{session.name}</span></span>
       </div>
-      <button onClick={onLogout} className="btn-ghost flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold">
+      <button onClick={onLogout} className="btn-logout flex shrink-0 items-center gap-1.5 px-4 py-1.5 text-xs">
         <LogOut className="h-3.5 w-3.5" /> Sair
       </button>
     </div>
@@ -334,24 +330,24 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
         </div>
       ) : (
         <div className="mb-4">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary-glow">
-              <DollarSign className="h-4 w-4" /> Pagamento via Pix
-            </div>
-            <span className="text-2xl font-black text-primary-glow tabular-nums">{settings.entryFee}</span>
+          <div className="valor-display mb-4 px-4 py-4 text-center">
+            <div className="text-[11px] uppercase tracking-[1px] text-muted-foreground">Valor da inscrição</div>
+            <div className="title-gradient mt-1 text-[36px] leading-none">{settings.entryFee}</div>
           </div>
 
-          <div className="rounded-2xl border border-primary/30 bg-background/60 p-4 shadow-[0_0_30px_-10px_var(--color-primary-glow)]">
-            <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Chave Pix</div>
-            <div className="mb-3 break-all rounded-lg border border-border bg-surface-2/70 px-3 py-3 text-center font-mono text-sm text-primary-glow" style={{ fontFamily: "'Courier New', ui-monospace, monospace" }}>
+          <div className="pix-box p-[18px]">
+            <div className="mb-2 flex items-center gap-2 text-sm font-bold">
+              <QrCode className="h-4 w-4 text-primary-glow" /> Chave Pix
+            </div>
+            <div className="pix-code mb-3 px-3.5 py-3 text-[15px]">
               {settings.pixKey}
             </div>
-            <button onClick={copy} className="btn-primary flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-bold">
+            <button onClick={copy} className="btn-primary flex w-full items-center justify-center gap-2 rounded-[14px] px-5 py-3.5 text-[15px]">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Chave copiada!" : "Copiar chave Pix"}
             </button>
           </div>
 
-          <a href={waLink} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-md bg-success/15 py-2.5 text-sm font-bold text-success hover:bg-success/25 transition">
+          <a href={waLink} target="_blank" rel="noreferrer" className="btn-green mt-3 flex w-full items-center justify-center gap-2 rounded-[14px] px-5 py-3.5 text-[15px]">
             <MessageCircle className="h-4 w-4" /> Avisar admin no WhatsApp
           </a>
 
@@ -362,8 +358,8 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
       )}
 
 
-      <div className="rounded-xl border border-border bg-surface-2/50 p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+      <div className="pix-box p-4">
+        <div className="mb-2 flex items-center gap-2 text-sm font-bold">
           <DoorOpen className="h-4 w-4 text-primary-glow" /> Sala do campeonato
         </div>
         {settings.roomUnlocked && settings.roomLink ? (
