@@ -330,24 +330,24 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
         </div>
       ) : (
         <div className="mb-4">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary-glow">
-              <DollarSign className="h-4 w-4" /> Pagamento via Pix
-            </div>
-            <span className="text-2xl font-black text-primary-glow tabular-nums">{settings.entryFee}</span>
+          <div className="valor-display mb-4 px-4 py-4 text-center">
+            <div className="text-[11px] uppercase tracking-[1px] text-muted-foreground">Valor da inscrição</div>
+            <div className="title-gradient mt-1 text-[36px] leading-none">{settings.entryFee}</div>
           </div>
 
-          <div className="rounded-2xl border border-primary/30 bg-background/60 p-4 shadow-[0_0_30px_-10px_var(--color-primary-glow)]">
-            <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Chave Pix</div>
-            <div className="mb-3 break-all rounded-lg border border-border bg-surface-2/70 px-3 py-3 text-center font-mono text-sm text-primary-glow" style={{ fontFamily: "'Courier New', ui-monospace, monospace" }}>
+          <div className="pix-box p-[18px]">
+            <div className="mb-2 flex items-center gap-2 text-sm font-bold">
+              <QrCode className="h-4 w-4 text-primary-glow" /> Chave Pix
+            </div>
+            <div className="pix-code mb-3 px-3.5 py-3 text-[15px]">
               {settings.pixKey}
             </div>
-            <button onClick={copy} className="btn-primary flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-bold">
+            <button onClick={copy} className="btn-primary flex w-full items-center justify-center gap-2 rounded-[14px] px-5 py-3.5 text-[15px]">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Chave copiada!" : "Copiar chave Pix"}
             </button>
           </div>
 
-          <a href={waLink} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-md bg-success/15 py-2.5 text-sm font-bold text-success hover:bg-success/25 transition">
+          <a href={waLink} target="_blank" rel="noreferrer" className="btn-green mt-3 flex w-full items-center justify-center gap-2 rounded-[14px] px-5 py-3.5 text-[15px]">
             <MessageCircle className="h-4 w-4" /> Avisar admin no WhatsApp
           </a>
 
@@ -358,8 +358,8 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
       )}
 
 
-      <div className="rounded-xl border border-border bg-surface-2/50 p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+      <div className="pix-box p-4">
+        <div className="mb-2 flex items-center gap-2 text-sm font-bold">
           <DoorOpen className="h-4 w-4 text-primary-glow" /> Sala do campeonato
         </div>
         {settings.roomUnlocked && settings.roomLink ? (
