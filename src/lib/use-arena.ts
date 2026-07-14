@@ -17,6 +17,17 @@ export function useArena() {
 
   useEffect(() => {
     let alive = true;
+
+    // Ensure an anonymous auth session so authenticated-only writes work.
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        await supabase.auth.signInAnonymously().catch((e) => {
+          console.error("[arena] anon sign-in failed", e);
+        });
+      }
+    })();
+
     fetchState().then((s) => {
       if (!alive) return;
       setState(s);
