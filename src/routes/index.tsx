@@ -231,11 +231,12 @@ function Stat({ label, value, icon }: { label: string; value: number; icon: Reac
 function SessionBar({ session, onLogout }: { session: { name: string; phone: string } | null; onLogout: () => void }) {
   if (!session) return null;
   return (
-    <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-surface-2/50 px-4 py-2.5 text-sm animate-fade-up">
-      <div className="min-w-0 truncate">
-        Logado como <span className="font-semibold text-primary-glow">{session.name}</span>
+    <div className="user-bar mb-4 flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm animate-fade-up">
+      <div className="flex min-w-0 items-center gap-2 truncate">
+        <span className="text-primary-glow text-lg">👤</span>
+        <span className="truncate">Logado como <span className="font-bold text-[#c4b5fd]">{session.name}</span></span>
       </div>
-      <button onClick={onLogout} className="btn-ghost flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold">
+      <button onClick={onLogout} className="btn-logout flex shrink-0 items-center gap-1.5 px-4 py-1.5 text-xs">
         <LogOut className="h-3.5 w-3.5" /> Sair
       </button>
     </div>
