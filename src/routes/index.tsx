@@ -22,16 +22,23 @@ function ArenaPage() {
   const { state, update, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
   const { settings, registered, history, feed } = state;
 
-  // Show new feed events as toast notifications (bottom-right)
+  // Show ONLY new feed events (arrived after mount) as toasts.
+  // Prevents old events from re-firing when the page opens/reloads.
   const seenIds = useRef<Set<string>>(new Set());
+  const mountTime = useRef<number>(Date.now());
   const bootstrapped = useRef(false);
   useEffect(() => {
     if (!bootstrapped.current) {
+      // Mark every existing event as seen; dismiss any leftover toasts.
       feed.forEach((f) => seenIds.current.add(f.id));
+      mountTime.current = Date.now();
       bootstrapped.current = true;
+      toast.dismiss();
       return;
     }
-    const fresh = feed.filter((f) => !seenIds.current.has(f.id));
+    const fresh = feed.filter(
+      (f) => !seenIds.current.has(f.id) && f.at >= mountTime.current - 500,
+    );
     fresh.reverse().forEach((f) => {
       seenIds.current.add(f.id);
       const icon =
@@ -39,8 +46,10 @@ function ArenaPage() {
         f.type === "pagamento" ? "💸" :
         f.type === "sala" ? "🚪" :
         f.type === "diario" ? "🏁" : "⚡";
-      toast(`${icon} ${f.message}`);
+      toast(`${icon} ${f.message}`, { id: f.id, duration: 3500 });
     });
+    // Also mark any old-but-unseen events as seen so they never fire.
+    feed.forEach((f) => seenIds.current.add(f.id));
   }, [feed]);
 
 
