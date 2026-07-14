@@ -192,36 +192,40 @@ function Header() {
 
 /* ---------- Stats + Progress ---------- */
 function StatsBar({ filled, total, remaining, pct }: { filled: number; total: number; remaining: number; pct: number }) {
+  const fillClass =
+    pct >= 100 ? "progress-fill progress-fill-high" :
+    pct >= 80 ? "progress-fill progress-fill-high" :
+    pct >= 50 ? "progress-fill progress-fill-medium" :
+    "progress-fill";
   return (
-    <section className="card-surface mb-4 p-5 animate-fade-up">
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <Stat label="Vagas" value={total} icon={<Users className="h-4 w-4" />} />
-        <Stat label="Inscritos" value={filled} icon={<Zap className="h-4 w-4" />} highlight />
-        <Stat label="Restantes" value={remaining} icon={<Crown className="h-4 w-4" />} />
+    <section className="card-surface mb-4 p-6 animate-fade-up">
+      <div className="grid grid-cols-3 gap-2.5 mb-3">
+        <Stat label="Vagas" value={total} icon={<Users className="h-[18px] w-[18px]" />} />
+        <Stat label="Inscritos" value={filled} icon={<Zap className="h-[18px] w-[18px]" />} />
+        <Stat label="Restantes" value={remaining} icon={<Crown className="h-[18px] w-[18px]" />} />
       </div>
-      <div className="mt-5">
-        <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{filled}/{total} vagas preenchidas</span>
-          <span className="font-semibold text-primary-glow tabular-nums">{Math.round(pct)}%</span>
-        </div>
+      <div className="mt-1">
         <div className="progress-shell">
-          <div className="progress-fill" style={{ width: `${pct}%` }} />
+          <div className={fillClass} style={{ width: `${pct}%` }} />
+        </div>
+        <div className="mt-1.5 text-center text-xs text-muted-foreground">
+          {filled}/{total} vagas preenchidas · {Math.round(pct)}%
         </div>
       </div>
     </section>
   );
 }
 
-function Stat({ label, value, icon, highlight }: { label: string; value: number; icon: React.ReactNode; highlight?: boolean }) {
+function Stat({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className={`rounded-xl border border-border p-3 ${highlight ? "bg-primary/10" : "bg-surface-2/50"}`}>
-      <div className="mb-1 flex items-center justify-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-        {icon}<span>{label}</span>
-      </div>
-      <div className={`text-2xl font-black tabular-nums ${highlight ? "text-primary-glow" : ""}`}>{value}</div>
+    <div className="mini-stat">
+      <div className="text-primary-glow flex justify-center">{icon}</div>
+      <div className="mt-1 text-[26px] font-extrabold leading-none text-white tabular-nums">{value}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-wide">{label}</div>
     </div>
   );
 }
+
 
 /* ---------- Session Bar ---------- */
 function SessionBar({ session, onLogout }: { session: { name: string; phone: string } | null; onLogout: () => void }) {
