@@ -89,7 +89,10 @@ export async function persistState(next: ArenaState): Promise<void> {
     .from("arena_state")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .upsert({ id: 1, data: next as any, updated_at: new Date().toISOString() });
-  if (error) console.error("[arena] persist error", error);
+  if (error) {
+    console.error("[arena] persist error", error);
+    throw error;
+  }
 }
 
 export type Session = { name: string; phone: string } | null;
