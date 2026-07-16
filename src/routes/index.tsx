@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
 });
 
 function ArenaPage() {
-  const { state, update, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
+  const { state, update, updateAtomic, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
   const { settings, registered, history, feed } = state;
 
   // Show ONLY new feed events (arrived after mount) as toasts.
@@ -88,9 +88,17 @@ function ArenaPage() {
             {session && !currentPlayer && remaining > 0 && (
               <RegisterCard
                 session={session}
-                onRegister={(nick) => {
-                  update((s) => {
-                    if (s.registered.find((p) => p.phone === session.phone)) return s;
+                onRegister={async (nick) => {
+                  const result = await updateAtomic((s) => {
+                    if (s.registered.find((p) => p.phone === session.phone)) {
+                      return { error: "Você já está inscrito" };
+                    }
+                    if (s.registered.length >= s.settings.totalSlots) {
+                      return { error: "Vagas esgotadas" };
+                    }
+                    if (!s.settings.diaryOpen) {
+                      return { error: "Inscrições fechadas" };
+                    }
                     const player: Player = {
                       id: uid(),
                       name: session.name,
@@ -103,12 +111,17 @@ function ArenaPage() {
                     let next = { ...s, registered: [...s.registered, player] };
                     next = upsertHistory(next, player);
                     next = pushFeed(next, { type: "inscricao", message: `${nick} garantiu vaga no diário` });
-                    return next;
+                    return { next };
                   });
-                  toast.success("✅ Sua vaga foi garantida!");
+                  if (result.ok) {
+                    toast.success("✅ Sua vaga foi garantida!");
+                  } else {
+                    toast.error(result.error || "Não foi possível concluir a inscrição");
+                  }
                 }}
               />
             )}
+
 
             {session && !currentPlayer && remaining === 0 && <SlotsFull />}
 
