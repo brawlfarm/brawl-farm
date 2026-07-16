@@ -733,8 +733,6 @@ function AdminPlayers({ state, update }: {
   update: (u: (s: import("@/lib/arena-store").ArenaState) => import("@/lib/arena-store").ArenaState) => void;
 }) {
   const registered = state.registered;
-  const [finalizeOpen, setFinalizeOpen] = useState(false);
-  const [winnerId, setWinnerId] = useState("");
 
   const removePlayer = (id: string) => update((st) => ({ ...st, registered: st.registered.filter((p) => p.id !== id) }));
 
@@ -753,65 +751,29 @@ function AdminPlayers({ state, update }: {
     });
   };
 
-  const confirmFinalize = () => {
-    const winner = state.registered.find((p) => p.id === winnerId);
-    update((st) => {
-      let next: import("@/lib/arena-store").ArenaState = { ...st, registered: [] };
-      if (winner) {
-        next = pushFeed(next, { type: "vencedor", message: `🏆 ${winner.nick || winner.name} venceu o campeonato!` });
-      }
-      return next;
-    });
-
-    setFinalizeOpen(false);
-    setWinnerId("");
-    toast.success(winner ? `${winner.nick || winner.name} declarado vencedor!` : "Partida finalizada");
-  };
-
   return (
     <div className="grid gap-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold">Inscritos ({registered.length})</span>
-        {registered.length > 0 && (
-          <button onClick={() => setFinalizeOpen(true)} className="btn-danger flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold">
-            <Flag className="h-3.5 w-3.5" /> Finalizar partida
-          </button>
-        )}
       </div>
-
-      {finalizeOpen && (
-        <div className="rounded-xl border border-primary/40 bg-primary/10 p-4 animate-fade-up">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-primary-glow">
-            <Trophy className="h-4 w-4" /> Selecione o vencedor
-          </div>
-          <p className="mb-3 text-xs text-muted-foreground">Não altera o ranking. Só registra o vencedor no feed e limpa a lista.</p>
-          <select value={winnerId} onChange={(e) => setWinnerId(e.target.value)} className="input-field mb-3">
-            <option value="">— Sem vencedor —</option>
-            {registered.map((p) => (
-              <option key={p.id} value={p.id}>{p.nick || p.name}</option>
-            ))}
-          </select>
-          <div className="flex gap-2">
-            <button onClick={() => setFinalizeOpen(false)} className="btn-ghost flex-1 rounded-md py-2 text-sm font-semibold">Cancelar</button>
-            <button onClick={confirmFinalize} className="btn-primary flex-1 rounded-md py-2 text-sm font-semibold">Confirmar</button>
-          </div>
-        </div>
-      )}
 
       {registered.length === 0 ? (
         <p className="text-sm text-muted-foreground">Sem inscritos no momento.</p>
       ) : (
         registered.map((p) => (
-          <div key={p.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/40 p-3">
-            <div className="min-w-0 flex-1">
+          <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-surface-2/40 p-3 sm:flex">
+            <div className="min-w-0 sm:flex-1">
               <div className="truncate font-semibold">{p.nick || p.name}</div>
               <div className="truncate text-xs text-muted-foreground">{p.name} • {p.phone}</div>
             </div>
-            <button onClick={() => togglePaid(p.id)} className={`chip shrink-0 ${p.paid ? "!text-success !border-success/40 !bg-success/15" : ""}`}>{p.paid ? "Pago" : "Marcar pago"}</button>
-            <button onClick={() => removePlayer(p.id)} className="btn-ghost grid h-9 w-9 shrink-0 place-items-center rounded-md text-destructive"><Trash2 className="h-4 w-4" /></button>
+            <div className="flex shrink-0 items-center gap-2 justify-self-end">
+              <button onClick={() => togglePaid(p.id)} className={`chip shrink-0 ${p.paid ? "!text-success !border-success/40 !bg-success/15" : ""}`}>{p.paid ? "Pago" : "Marcar pago"}</button>
+              <button onClick={() => removePlayer(p.id)} aria-label="Remover inscrito" className="btn-ghost grid h-9 w-9 shrink-0 place-items-center rounded-md text-destructive"><Trash2 className="h-4 w-4" /></button>
+            </div>
           </div>
         ))
       )}
     </div>
   );
 }
+
