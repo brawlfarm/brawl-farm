@@ -88,8 +88,46 @@ export function useArena() {
       });
   }, []);
 
+  // Atomic update: re-fetches the latest server state inside the write queue
+  // so multi-client races (e.g. two users grabbing the last slot at once)
+  // are resolved against fresh data. The updater returns `{ next }` to
+  // persist or `{ error }` to abort.
+  const updateAtomic = useCallback(
+    (updater: (fresh: ArenaState) => { next?: ArenaState; error?: string }) => {
+      return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+        writeQueueRef.current = writeQueueRef.current
+          .then(async () => {
+            try {
+              await ensureAnonymousSession();
+              const fresh = await fetchState();
+              const result = updater(fresh);
+              if (result.error || !result.next) {
+                stateRef.current = fresh;
+                setState(fresh);
+                resolve({ ok: false, error: result.error });
+                return;
+              }
+              await persistState(result.next);
+              stateRef.current = result.next;
+              setState(result.next);
+              resolve({ ok: true });
+            } catch (error) {
+              console.error("[arena] atomic write failed", error);
+              resolve({ ok: false, error: String(error) });
+            }
+          })
+          .catch((error) => {
+            console.error("[arena] queue error", error);
+            resolve({ ok: false, error: String(error) });
+          });
+      });
+    },
+    [],
+  );
+
   const setSession = useCallback((s: Session) => { saveSession(s); setSessionState(s); }, []);
   const setIsAdmin = useCallback((v: boolean) => { saveAdmin(v); setIsAdminState(v); }, []);
 
-  return { state, update, session, setSession, isAdmin, setIsAdmin, loading, connected };
+  return { state, update, updateAtomic, session, setSession, isAdmin, setIsAdmin, loading, connected };
 }
+
