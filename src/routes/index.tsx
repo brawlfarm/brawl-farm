@@ -653,9 +653,31 @@ function AdminConfig({ state, update }: {
         </button>
       </div>
 
-      <button onClick={finalizeDiary} className="btn-primary mt-2 flex items-center justify-center gap-2 rounded-md py-3 font-bold">
+      <button onClick={openFinalize} className="btn-primary mt-2 flex items-center justify-center gap-2 rounded-md py-3 font-bold">
         <Flag className="h-4 w-4" /> Finalizar diário (+1 partida p/ inscritos)
       </button>
+
+      {finalizeOpen && (
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-4 animate-fade-up">
+          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-primary-glow">
+            <Trophy className="h-4 w-4" /> Selecione o vencedor (opcional)
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Isso vai adicionar +1 partida para os {state.registered.length} inscritos e limpar a lista. Selecionar o vencedor não altera o ranking, apenas registra no feed.
+          </p>
+          <select value={winnerId} onChange={(e) => setWinnerId(e.target.value)} className="input-field mb-3">
+            <option value="">— Sem vencedor —</option>
+            {state.registered.map((p) => (
+              <option key={p.id} value={p.id}>{p.nick || p.name}</option>
+            ))}
+          </select>
+          <div className="flex gap-2">
+            <button onClick={() => setFinalizeOpen(false)} className="btn-ghost flex-1 rounded-md py-2 text-sm font-semibold">Cancelar</button>
+            <button onClick={confirmFinalize} className="btn-primary flex-1 rounded-md py-2 text-sm font-semibold">Confirmar</button>
+          </div>
+        </div>
+      )}
+
 
       <div className="mt-4 border-t border-border pt-4">
         <label className="text-xs font-semibold uppercase text-muted-foreground">Alterar senha do admin</label>
