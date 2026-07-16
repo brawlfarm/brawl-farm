@@ -585,21 +585,33 @@ function AdminConfig({ state, update }: {
     toast.success(s.roomUnlocked ? "Sala ocultada" : "Sala liberada!");
   };
 
-  const finalizeDiary = () => {
+  const openFinalize = () => {
     if (state.registered.length === 0) { toast.error("Sem inscritos"); return; }
-    if (!confirm(`Finalizar diário? Isso vai adicionar +1 partida para os ${state.registered.length} inscritos.`)) return;
+    setWinnerId("");
+    setFinalizeOpen(true);
+  };
+
+  const confirmFinalize = () => {
+    const winner = state.registered.find((p) => p.id === winnerId);
+    const count = state.registered.length;
     update((st) => {
       const ids = new Set(st.registered.map((p) => p.id));
       const phones = new Set(st.registered.map((p) => p.phone));
       const history = st.history.map((p) =>
         ids.has(p.id) || phones.has(p.phone) ? { ...p, matchesPlayed: (p.matchesPlayed || 0) + 1 } : p
       );
-      let next = { ...st, history };
-      next = pushFeed(next, { type: "diario", message: `Diário finalizado! +1 partida para ${st.registered.length} jogadores` });
+      let next: import("@/lib/arena-store").ArenaState = { ...st, history, registered: [] };
+      next = pushFeed(next, { type: "diario", message: `Diário finalizado! +1 partida para ${count} jogadores` });
+      if (winner) {
+        next = pushFeed(next, { type: "vencedor", message: `🏆 ${winner.nick || winner.name} venceu o campeonato!` });
+      }
       return next;
     });
-    toast.success("Diário finalizado! Rankings atualizados.");
+    setFinalizeOpen(false);
+    setWinnerId("");
+    toast.success(winner ? `${winner.nick || winner.name} venceu! Diário finalizado.` : "Diário finalizado!");
   };
+
 
   return (
     <div className="grid gap-3">
