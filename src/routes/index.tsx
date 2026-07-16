@@ -563,6 +563,8 @@ function AdminConfig({ state, update }: {
   state: import("@/lib/arena-store").ArenaState;
   update: (u: (s: import("@/lib/arena-store").ArenaState) => import("@/lib/arena-store").ArenaState) => void;
 }) {
+  const [finalizeOpen, setFinalizeOpen] = useState(false);
+  const [winnerId, setWinnerId] = useState("");
   const s = state.settings;
   const [form, setForm] = useState(s);
   useEffect(() => setForm(s), [s]);
