@@ -18,7 +18,7 @@ export type Settings = {
   roomLink: string;
   roomUnlocked: boolean;
   diaryOpen: boolean;
-  adminPassword: string;
+  adminPassword?: string; // deprecated: senha agora fica no servidor (env ADMIN_PASSWORD)
   whatsappNumber: string;
   whatsappMessage: string;
   freeEntryThreshold: number;
@@ -49,7 +49,7 @@ export const defaultState: ArenaState = {
     roomLink: "",
     roomUnlocked: false,
     diaryOpen: true,
-    adminPassword: "admin123",
+    // adminPassword removida do banco público — agora vive apenas no servidor
     whatsappNumber: "5511999999999",
     whatsappMessage: "Olá! Paguei o Pix da inscrição do campeonato.",
     freeEntryThreshold: 10,

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect, useRef } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Trophy, LogOut, LogIn, Copy, Check, MessageCircle, DoorOpen, Shield,
@@ -11,6 +12,8 @@ import {
 import { useArena } from "@/lib/use-arena";
 import { uid, upsertHistory, pushFeed, type Player } from "@/lib/arena-store";
 import { FarmBot } from "@/components/FarmBot";
+import { adminLogin, adminLogout, adminStatus } from "@/lib/admin-auth.functions";
+
 
 
 
@@ -150,14 +153,11 @@ function ArenaPage() {
 
         <AdminSection
           isAdmin={isAdmin}
-          onLogin={(pwd) => {
-            if (pwd === settings.adminPassword) { setIsAdmin(true); toast.success("Modo admin ativado"); return true; }
-            return false;
-          }}
-          onLogout={() => { setIsAdmin(false); toast.info("Você saiu do modo admin"); }}
+          setIsAdmin={setIsAdmin}
           state={state}
           update={update}
         />
+
 
         <footer className="footer-mono mt-10 pb-10 text-center text-xs text-muted-foreground/60">
           © Pietro Henrique
@@ -497,18 +497,53 @@ function Ranking({ history }: { history: Player[] }) {
 
 /* ---------- Admin ---------- */
 function AdminSection({
-  isAdmin, onLogin, onLogout, state, update,
+  isAdmin, setIsAdmin, state, update,
 }: {
   isAdmin: boolean;
-  onLogin: (pwd: string) => boolean;
-  onLogout: () => void;
+  setIsAdmin: (v: boolean) => void;
   state: import("@/lib/arena-store").ArenaState;
   update: (u: (s: import("@/lib/arena-store").ArenaState) => import("@/lib/arena-store").ArenaState) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"config" | "ranking" | "players">("config");
+
+  const loginFn = useServerFn(adminLogin);
+  const logoutFn = useServerFn(adminLogout);
+  const statusFn = useServerFn(adminStatus);
+
+  // Hydrate from server-side session cookie; local flag alone is not trusted.
+  useEffect(() => {
+    let alive = true;
+    statusFn({})
+      .then((r) => { if (alive) setIsAdmin(Boolean(r?.isAdmin)); })
+      .catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLogin = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const r = await loginFn({ data: { password: pwd } });
+      if (r?.ok) { setIsAdmin(true); setPwd(""); toast.success("Modo admin ativado"); }
+      else setError("Senha incorreta");
+    } catch (e) {
+      setError(String((e as Error).message || "Falha no login"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try { await logoutFn({}); } catch { /* ignore */ }
+    setIsAdmin(false);
+    toast.info("Você saiu do modo admin");
+  };
 
   return (
     <section className="card-surface mb-4 overflow-hidden animate-fade-up">
@@ -526,13 +561,13 @@ function AdminSection({
           {!isAdmin ? (
             <div className="grid gap-3">
               <h3 className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4" /> Login do admin</h3>
-              <input type="password" className="input-field" placeholder="Senha" value={pwd}
+              <input type="password" className="input-field" placeholder="Senha" value={pwd} disabled={busy}
                 onChange={(e) => { setPwd(e.target.value); setError(""); }}
-                onKeyDown={(e) => { if (e.key === "Enter") { if (!onLogin(pwd)) setError("Senha incorreta"); else setPwd(""); } }} />
+                onKeyDown={(e) => { if (e.key === "Enter") void handleLogin(); }} />
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <button className="btn-primary rounded-md py-2.5 font-semibold"
-                onClick={() => { if (!onLogin(pwd)) setError("Senha incorreta"); else setPwd(""); }}>
-                Entrar como admin
+              <button className="btn-primary rounded-md py-2.5 font-semibold" disabled={busy}
+                onClick={() => void handleLogin()}>
+                {busy ? "Verificando..." : "Entrar como admin"}
               </button>
             </div>
           ) : (
@@ -551,13 +586,14 @@ function AdminSection({
               {tab === "players" && <AdminPlayers state={state} update={update} />}
 
               <div className="mt-5 border-t border-border pt-4">
-                <button onClick={onLogout} className="btn-ghost flex w-full items-center justify-center gap-2 rounded-md py-2.5 font-semibold">
+                <button onClick={() => void handleLogout()} className="btn-ghost flex w-full items-center justify-center gap-2 rounded-md py-2.5 font-semibold">
                   <LogOut className="h-4 w-4" /> Sair do admin
                 </button>
               </div>
             </>
           )}
         </div>
+
       )}
     </section>
   );
@@ -572,7 +608,7 @@ function AdminConfig({ state, update }: {
   const s = state.settings;
   const [form, setForm] = useState(s);
   useEffect(() => setForm(s), [s]);
-  const [newPwd, setNewPwd] = useState("");
+  
 
   const save = () => {
     update((st) => ({ ...st, settings: { ...st.settings, ...form } }));
@@ -684,13 +720,11 @@ function AdminConfig({ state, update }: {
 
 
       <div className="mt-4 border-t border-border pt-4">
-        <label className="text-xs font-semibold uppercase text-muted-foreground">Alterar senha do admin</label>
-        <div className="mt-2 flex gap-2">
-          <input type="password" className="input-field" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="Nova senha" />
-          <button onClick={() => { if (newPwd.trim()) { update((st) => ({ ...st, settings: { ...st.settings, adminPassword: newPwd } })); setNewPwd(""); toast.success("Senha alterada"); } }}
-            className="btn-primary shrink-0 rounded-md px-4 text-sm font-semibold">Alterar</button>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          🔒 A senha do admin agora fica armazenada de forma segura no servidor (variável de ambiente <code>ADMIN_PASSWORD</code>) e nunca trafega pelo banco público. Para alterá-la, atualize o segredo do projeto.
+        </p>
       </div>
+
     </div>
   );
 }

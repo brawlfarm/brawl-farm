@@ -1,0 +1,1 @@
+UPDATE public.arena_state SET data = data - 'settings' || jsonb_build_object('settings', (data->'settings') - 'adminPassword') WHERE id = 1 AND data->'settings' ? 'adminPassword';
