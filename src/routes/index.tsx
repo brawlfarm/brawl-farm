@@ -608,7 +608,7 @@ function AdminConfig({ state, update }: {
   const s = state.settings;
   const [form, setForm] = useState(s);
   useEffect(() => setForm(s), [s]);
-  const [newPwd, setNewPwd] = useState("");
+  
 
   const save = () => {
     update((st) => ({ ...st, settings: { ...st.settings, ...form } }));
