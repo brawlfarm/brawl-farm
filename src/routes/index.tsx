@@ -720,13 +720,11 @@ function AdminConfig({ state, update }: {
 
 
       <div className="mt-4 border-t border-border pt-4">
-        <label className="text-xs font-semibold uppercase text-muted-foreground">Alterar senha do admin</label>
-        <div className="mt-2 flex gap-2">
-          <input type="password" className="input-field" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="Nova senha" />
-          <button onClick={() => { if (newPwd.trim()) { update((st) => ({ ...st, settings: { ...st.settings, adminPassword: newPwd } })); setNewPwd(""); toast.success("Senha alterada"); } }}
-            className="btn-primary shrink-0 rounded-md px-4 text-sm font-semibold">Alterar</button>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          🔒 A senha do admin agora fica armazenada de forma segura no servidor (variável de ambiente <code>ADMIN_PASSWORD</code>) e nunca trafega pelo banco público. Para alterá-la, atualize o segredo do projeto.
+        </p>
       </div>
+
     </div>
   );
 }
