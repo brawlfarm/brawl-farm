@@ -67,7 +67,11 @@ function ArenaPage() {
     return history.find((p) => p.phone === session.phone) || null;
   }, [session, history]);
 
-  const hasFreeEntry = (historyPlayer?.matchesPlayed ?? 0) >= settings.freeEntryThreshold;
+  const hasFreeEntry = (() => {
+    const played = historyPlayer?.matchesPlayed ?? 0;
+    const threshold = settings.freeEntryThreshold || 0;
+    return played > 0 && threshold > 0 && played % threshold === 0;
+  })();
 
   if (loading) return <LoadingScreen connected={connected} />;
 
