@@ -12,6 +12,7 @@ import {
 import { useArena } from "@/lib/use-arena";
 import { uid, upsertHistory, pushFeed, type Player } from "@/lib/arena-store";
 import { FarmBot } from "@/components/FarmBot";
+import { FreeEntryBadge } from "@/components/FreeEntryBadge";
 import { adminLogin, adminLogout, adminStatus } from "@/lib/admin-auth.functions";
 
 
