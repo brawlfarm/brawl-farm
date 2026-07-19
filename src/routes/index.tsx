@@ -813,7 +813,8 @@ function AdminPlayers({ state, update }: {
               <div className="truncate font-semibold">{p.nick || p.name}</div>
               <div className="truncate text-xs text-muted-foreground">{p.name} • {p.phone}</div>
             </div>
-            <div className="flex shrink-0 items-center gap-2 justify-self-end">
+            <div className="flex shrink-0 flex-wrap items-center gap-2 justify-self-end">
+              {isPlayerFreeEntry(p, state.settings.freeEntryThreshold) && <FreeEntryBadge />}
               <button onClick={() => togglePaid(p.id)} className={`chip shrink-0 ${p.paid ? "!text-success !border-success/40 !bg-success/15" : ""}`}>{p.paid ? "Pago" : "Marcar pago"}</button>
               <button onClick={() => removePlayer(p.id)} aria-label="Remover inscrito" className="btn-ghost grid h-9 w-9 shrink-0 place-items-center rounded-md text-destructive"><Trash2 className="h-4 w-4" /></button>
             </div>
