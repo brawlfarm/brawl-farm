@@ -152,7 +152,7 @@ function ArenaPage() {
           </>
         )}
 
-        <PlayersList registered={registered} />
+        <PlayersList registered={registered} settings={settings} />
         <Ranking history={history} />
 
 
