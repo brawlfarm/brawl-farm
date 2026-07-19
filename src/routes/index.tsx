@@ -411,7 +411,7 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
 
 
 /* ---------- Players list ---------- */
-function PlayersList({ registered }: { registered: Player[] }) {
+function PlayersList({ registered, settings }: { registered: Player[]; settings: import("@/lib/arena-store").Settings }) {
   return (
     <section className="card-surface mb-4 p-5 animate-fade-up">
       <h2 className="mb-3 flex items-center gap-2 text-lg font-bold"><Users className="h-5 w-5 text-primary-glow" /> Inscritos <span className="chip ml-1">{registered.length}</span></h2>
@@ -426,7 +426,10 @@ function PlayersList({ registered }: { registered: Player[] }) {
                 <div className="truncate font-semibold">{p.nick || p.name}</div>
                 <div className="truncate text-xs text-muted-foreground">{p.name}</div>
               </div>
-              {p.paid && <span className="chip !text-success !border-success/40 !bg-success/15">Pago</span>}
+              <div className="flex shrink-0 flex-wrap items-center gap-1.5 justify-self-end">
+                {isPlayerFreeEntry(p, settings.freeEntryThreshold) && <FreeEntryBadge />}
+                {p.paid && <span className="chip !text-success !border-success/40 !bg-success/15">Pago</span>}
+              </div>
             </li>
           ))}
         </ul>
