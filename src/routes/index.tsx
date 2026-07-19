@@ -22,6 +22,11 @@ export const Route = createFileRoute("/")({
   component: ArenaPage,
 });
 
+function isPlayerFreeEntry(player: Player, threshold: number) {
+  const played = player.matchesPlayed ?? 0;
+  return played > 0 && threshold > 0 && played % threshold === 0;
+}
+
 function ArenaPage() {
   const { state, update, updateAtomic, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
   const { settings, registered, history, feed } = state;
