@@ -388,6 +388,42 @@
   letter-spacing: 0.04em;
 }
 
+/* ============= Free entry present badge ============= */
+@utility present-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  padding: .35rem .6rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.06));
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+  overflow: hidden;
+  min-width: 72px;
+}
+@utility present-ribbon {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  transform: translateX(-50%);
+  background: rgba(251, 191, 36, 0.25);
+  pointer-events: none;
+}
+@utility present-ribbon-vertical {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
+  background: rgba(251, 191, 36, 0.25);
+  pointer-events: none;
+}
+
 /* ============= FarmBot ============= */
 @utility farmbot-launcher {
   position: fixed;
