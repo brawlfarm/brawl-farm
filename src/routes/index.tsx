@@ -12,6 +12,7 @@ import {
 import { useArena } from "@/lib/use-arena";
 import { uid, upsertHistory, pushFeed, type Player } from "@/lib/arena-store";
 import { FarmBot } from "@/components/FarmBot";
+import { FreeEntryBadge } from "@/components/FreeEntryBadge";
 import { adminLogin, adminLogout, adminStatus } from "@/lib/admin-auth.functions";
 
 
@@ -20,6 +21,11 @@ import { adminLogin, adminLogout, adminStatus } from "@/lib/admin-auth.functions
 export const Route = createFileRoute("/")({
   component: ArenaPage,
 });
+
+function isPlayerFreeEntry(player: Player, threshold: number) {
+  const played = player.matchesPlayed ?? 0;
+  return played > 0 && threshold > 0 && played % threshold === 0;
+}
 
 function ArenaPage() {
   const { state, update, updateAtomic, session, setSession, isAdmin, setIsAdmin, loading, connected } = useArena();
@@ -146,7 +152,7 @@ function ArenaPage() {
           </>
         )}
 
-        <PlayersList registered={registered} />
+        <PlayersList registered={registered} settings={settings} />
         <Ranking history={history} />
 
 
@@ -405,7 +411,7 @@ function SpotSecuredCard({ player, settings, hasFreeEntry, onLeave }: { player: 
 
 
 /* ---------- Players list ---------- */
-function PlayersList({ registered }: { registered: Player[] }) {
+function PlayersList({ registered, settings }: { registered: Player[]; settings: import("@/lib/arena-store").Settings }) {
   return (
     <section className="card-surface mb-4 p-5 animate-fade-up">
       <h2 className="mb-3 flex items-center gap-2 text-lg font-bold"><Users className="h-5 w-5 text-primary-glow" /> Inscritos <span className="chip ml-1">{registered.length}</span></h2>
@@ -420,7 +426,10 @@ function PlayersList({ registered }: { registered: Player[] }) {
                 <div className="truncate font-semibold">{p.nick || p.name}</div>
                 <div className="truncate text-xs text-muted-foreground">{p.name}</div>
               </div>
-              {p.paid && <span className="chip !text-success !border-success/40 !bg-success/15">Pago</span>}
+              <div className="flex shrink-0 flex-wrap items-center gap-1.5 justify-self-end">
+                {isPlayerFreeEntry(p, settings.freeEntryThreshold) && <FreeEntryBadge />}
+                {p.paid && <span className="chip !text-success !border-success/40 !bg-success/15">Pago</span>}
+              </div>
             </li>
           ))}
         </ul>
@@ -804,7 +813,8 @@ function AdminPlayers({ state, update }: {
               <div className="truncate font-semibold">{p.nick || p.name}</div>
               <div className="truncate text-xs text-muted-foreground">{p.name} • {p.phone}</div>
             </div>
-            <div className="flex shrink-0 items-center gap-2 justify-self-end">
+            <div className="flex shrink-0 flex-wrap items-center gap-2 justify-self-end">
+              {isPlayerFreeEntry(p, state.settings.freeEntryThreshold) && <FreeEntryBadge />}
               <button onClick={() => togglePaid(p.id)} className={`chip shrink-0 ${p.paid ? "!text-success !border-success/40 !bg-success/15" : ""}`}>{p.paid ? "Pago" : "Marcar pago"}</button>
               <button onClick={() => removePlayer(p.id)} aria-label="Remover inscrito" className="btn-ghost grid h-9 w-9 shrink-0 place-items-center rounded-md text-destructive"><Trash2 className="h-4 w-4" /></button>
             </div>
