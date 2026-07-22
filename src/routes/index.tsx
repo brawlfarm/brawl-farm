@@ -743,34 +743,101 @@ function AdminRanking({ state, update }: {
   update: (u: (s: import("@/lib/arena-store").ArenaState) => import("@/lib/arena-store").ArenaState) => void;
 }) {
   const history = state.history;
+  const [query, setQuery] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const [resetPwd, setResetPwd] = useState("");
+  const [resetErr, setResetErr] = useState("");
+
   const setMatches = (id: string, v: number) => update((st) => ({
     ...st,
     history: st.history.map((p) => p.id === id ? { ...p, matchesPlayed: Math.max(0, v) } : p),
     registered: st.registered.map((p) => p.id === id ? { ...p, matchesPlayed: Math.max(0, v) } : p),
   }));
 
-  if (history.length === 0) return <p className="text-sm text-muted-foreground">Ainda não há jogadores no histórico.</p>;
+  const doReset = () => {
+    if (resetPwd !== "reset211") {
+      setResetErr("Senha incorreta");
+      return;
+    }
+    update((st) => ({
+      ...st,
+      history: st.history.map((p) => ({ ...p, matchesPlayed: 0 })),
+      registered: st.registered.map((p) => ({ ...p, matchesPlayed: 0 })),
+    }));
+    toast.success("Ranking resetado");
+    setConfirming(false);
+    setResetPwd("");
+    setResetErr("");
+  };
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? history.filter((p) =>
+        (p.nick || "").toLowerCase().includes(q) ||
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.phone || "").toLowerCase().includes(q))
+    : history;
 
   return (
-    <div className="grid gap-2">
-      <p className="text-xs text-muted-foreground">Ajuste quantas partidas cada jogador já jogou.</p>
-      {history.map((p) => (
-        <div key={p.id} className="rounded-lg border border-border bg-surface-2/40 p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div className="truncate font-semibold">{p.nick || p.name}</div>
-              <div className="truncate text-xs text-muted-foreground">{p.phone}</div>
-            </div>
-            <span className="chip tabular-nums">{p.matchesPlayed}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="btn-ghost grid h-9 w-9 place-items-center rounded-md" onClick={() => setMatches(p.id, (p.matchesPlayed || 0) - 1)}><Minus className="h-4 w-4" /></button>
-            <input type="number" className="input-field text-center" value={p.matchesPlayed}
-              onChange={(e) => setMatches(p.id, +e.target.value || 0)} />
-            <button className="btn-ghost grid h-9 w-9 place-items-center rounded-md" onClick={() => setMatches(p.id, (p.matchesPlayed || 0) + 1)}><Plus className="h-4 w-4" /></button>
+    <div className="grid gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          className="input-field flex-1"
+          placeholder="Buscar por nick, nome ou telefone…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button className="btn-danger" onClick={() => { setConfirming(true); setResetErr(""); setResetPwd(""); }}>
+          Resetar ranking
+        </button>
+      </div>
+
+      {confirming && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 grid gap-2">
+          <p className="text-sm">Digite a senha para confirmar o reset do ranking:</p>
+          <input
+            type="password"
+            className="input-field"
+            placeholder="Senha"
+            value={resetPwd}
+            onChange={(e) => { setResetPwd(e.target.value); setResetErr(""); }}
+            onKeyDown={(e) => { if (e.key === "Enter") doReset(); }}
+            autoFocus
+          />
+          {resetErr && <p className="text-xs text-destructive">{resetErr}</p>}
+          <div className="flex gap-2">
+            <button className="btn-danger flex-1" onClick={doReset}>Confirmar reset</button>
+            <button className="btn-ghost flex-1" onClick={() => { setConfirming(false); setResetPwd(""); setResetErr(""); }}>Cancelar</button>
           </div>
         </div>
-      ))}
+      )}
+
+      {history.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Ainda não há jogadores no histórico.</p>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">Ajuste quantas partidas cada jogador já jogou.</p>
+          {filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum jogador encontrado.</p>
+          ) : filtered.map((p) => (
+            <div key={p.id} className="rounded-lg border border-border bg-surface-2/40 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="truncate font-semibold">{p.nick || p.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{p.phone}</div>
+                </div>
+                <span className="chip tabular-nums">{p.matchesPlayed}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="btn-ghost grid h-9 w-9 place-items-center rounded-md" onClick={() => setMatches(p.id, (p.matchesPlayed || 0) - 1)}><Minus className="h-4 w-4" /></button>
+                <input type="number" className="input-field text-center" value={p.matchesPlayed}
+                  onChange={(e) => setMatches(p.id, +e.target.value || 0)} />
+                <button className="btn-ghost grid h-9 w-9 place-items-center rounded-md" onClick={() => setMatches(p.id, (p.matchesPlayed || 0) + 1)}><Plus className="h-4 w-4" /></button>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }
